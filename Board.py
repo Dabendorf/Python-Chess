@@ -45,12 +45,6 @@ class Board:
 			return self.piece_to_letter_colourless(piece)
 		else:
 			return self.piece_to_letter_colourless(piece)
-		#if Piece.White in piece:
-		#	return self.piece_to_letter_colourless(piece - Piece.White).upper()
-		#elif Piece.Black in piece:
-		#	return self.piece_to_letter_colourless(piece - Piece.Black)
-		#else:
-		#	return self.piece_to_letter_colourless(piece)
 
 
 	def print_board(self):
