@@ -12,11 +12,14 @@ def main():
 	moves = []
 	global num_squares_to_edge
 	b.square[27] = Piece.White | Piece.Rook
+	b.square[36] = Piece.White | Piece.Bishop
 	num_squares_to_edge = compute_margin_to_edge()
 	
 	global to_move
 
 	print(all_possible_turns_player(to_move))
+	print(all_possible_turns_piece(27))
+	print(all_possible_turns_piece(36))
 
 	""" p = Piece.Black | Piece.King
 	print(p)
@@ -30,8 +33,18 @@ def main():
 def is_legal(piece: Piece):
 	pass
 
-def all_possible_turns_piece(piece: Piece) -> [Move]:
-	pass
+def all_possible_turns_piece(start_sq: int) -> [Move]:
+	piece = b.square[start_sq]
+	moves = []
+
+	if is_sliding_piece(piece):
+		moves.extend(generate_sliding_moves(start_sq, piece))
+	else:
+		pass
+
+	return moves
+
+	# TODO More pieces
 
 def all_possible_turns_player(player_to_move: Piece) -> [Move]:
 	# for every piece, if colour of player to move
@@ -48,7 +61,7 @@ def all_possible_turns_player(player_to_move: Piece) -> [Move]:
 
 	return moves
 
-	# weitere Pieces hinzufügen
+	# TODO weitere Pieces hinzufügen
 
 
 def generate_sliding_moves(start_sq: int, piece: Piece) -> [Move]:
