@@ -70,7 +70,8 @@ def generate_sliding_moves(start_sq: int, piece: Piece) -> [Move]:
 			if is_same_colour(piece, target_sq_piece):
 				break
 
-			moves.append(Move(start_sq, target_sq, ""))
+			moves.append(Move(start_sq, target_sq, get_move_notation(piece, start_sq, target_sq)))
+			# moves.append(Move(start_sq, target_sq, ""))
 
 			if is_different_colour(piece, target_sq_piece):
 				break
@@ -148,6 +149,89 @@ def is_sliding_piece(piece: Piece):
 	""" Rooks, Bishops and Queens share some properties, function returns if piece is one of them"""
 
 	return Piece.Rook in piece or Piece.Bishop in piece or Piece.Queen in piece
+
+
+def get_move_notation(piece: Piece, start_sq: int, target_sq: int) -> str:
+	"""This method returns a string of algebraic chess notation for a move"""
+	start_sq_ind = index_to_square_name(start_sq)
+	target_sq_ind = index_to_square_name(target_sq)
+
+	# TODO Please note: This function is programmed in a way to calculate the notation __before__ the move happens
+	# TODO Does not include check, checkmate, castling or promotion yet
+
+	#print(piece)
+	if Piece.Pawn in piece:
+		# TODO Promoting pieces missing
+		if start_sq % 8 == target_sq % 8:
+			return target_sq
+		elif abs((start_sq % 8) - (target_sq % 8)) == 1:
+			# Capture to the left
+			if (start_sq % 8) - (target_sq % 8) == 1:
+				# Edge on the left
+				if (start_sq % 8) != 1:
+					# If other pawn was able to do it
+					if Piece.Pawn in b.square[start_sq-2]:
+						return start_sq_ind+"x"+target_sq_ind
+					else:
+						"x"+target_sq_ind
+				else:
+					"x"+target_sq_ind
+			# Capture to the right
+			else:
+				# Edge on the right
+				if (start_sq % 8) != 6:
+					# If other pawn was able to do it
+					if Piece.Pawn in b.square[start_sq+2]:
+						return start_sq_ind+"x"+target_sq_ind
+					else:
+						"x"+target_sq_ind
+				else:
+					"x"+target_sq_ind
+
+
+	elif Piece.King in piece:
+		if Piece.Empty not in b.square[target_sq]:
+			return "Kx" + target_sq_ind
+		else:
+			return "K" + target_sq_ind
+
+	elif Piece.Queen in piece:
+		# TODO Fix ambiguatiy if two Queens where able to get here
+		if Piece.Empty not in b.square[target_sq]:
+			return "Qx" + target_sq_ind
+		else:
+			return "Q" + target_sq_ind
+
+	elif Piece.Rook in piece:
+		# TODO Fix ambiguatiy if two Rooks where able to get here
+		if Piece.Empty not in b.square[target_sq]:
+			return "Rx" + target_sq_ind
+		else:
+			return "R" + target_sq_ind
+
+	elif Piece.Bishop in piece:
+		# TODO Fix ambiguatiy if two Bishops where able to get here
+		if Piece.Empty not in b.square[target_sq]:
+			return "Bx" + target_sq_ind
+		else:
+			return "B" + target_sq_ind
+
+	elif Piece.Knight in piece:
+		# TODO Fix ambiguatiy if two Knight where able to get here
+		if Piece.Empty not in b.square[target_sq]:
+			return "Nx" + target_sq_ind
+		else:
+			return "N" + target_sq_ind
+
+	else:
+		return ""
+
+def index_to_square_name(ind: int) -> str:
+	"""Returns the name of a square (e.g. A4) for any index on the board """
+	num_dict = {0:"a", 1:"b", 2:"c", 3:"d", 4:"e", 5:"f", 6:"g", 7:"h"}
+
+	#return ""
+	return num_dict[ind%8]+str(int(ind/8)+1)
 
 
 if __name__ == "__main__":
