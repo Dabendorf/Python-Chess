@@ -39,8 +39,12 @@ def all_possible_turns_piece(start_sq: int) -> [Move]:
 
 	if is_sliding_piece(piece):
 		moves.extend(generate_sliding_moves(start_sq, piece))
-	else:
-		pass
+	elif Piece.King in piece:
+		move.extend(generate_king_moves(start_sq, piece))
+	elif Piece.Pawn in piece:
+		move.extend(generate_pawn_moves(start_sq, piece))
+	elif Piece.Knight in piece:
+		move.extend(generate_knight_moves(start_sq, piece))
 
 	return moves
 
@@ -65,7 +69,7 @@ def all_possible_turns_player(player_to_move: Piece) -> [Move]:
 
 
 def generate_sliding_moves(start_sq: int, piece: Piece) -> [Move]:
-	""""""
+	"""Generates moves for Rooks, Bishops and Queens"""
 	direction_offsets = [8, -8, -1, 1, 7, -7, 9, -9]
 	moves = []
 	start_ind = 0
@@ -92,7 +96,22 @@ def generate_sliding_moves(start_sq: int, piece: Piece) -> [Move]:
 	return moves
 
 			
+def generate_king_moves(start_sq: int, piece: Piece) -> [Move]:
+	"""Generates moves for Kings"""
+	moves = []
+	return moves # TODO Implement
 
+
+def generate_pawn_moves(start_sq: int, piece: Piece) -> [Move]:
+	"""Generates moves for Pawns"""
+	moves = []
+	return moves # TODO Implement
+
+
+def generate_knight_moves(start_sq: int, piece: Piece) -> [Move]:
+	"""Generates moves for Knights"""
+	moves = []
+	return moves # TODO Implement
 
 
 def is_check(b: Board):
