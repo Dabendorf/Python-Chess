@@ -4,7 +4,7 @@ from Move import Move
 from SpecialTurn import SpecialTurn
 
 b = Board()
-to_move = Piece.White
+to_move = Piece.Black
 num_squares_to_edge = [[]]
 all_moves = []
 
@@ -14,15 +14,15 @@ def main():
 	global all_moves
 
 	global num_squares_to_edge
-	b.square[27] = Piece.White | Piece.Rook
-	b.square[36] = Piece.White | Piece.Bishop
+	# b.square[27] = Piece.White | Piece.Rook
+	# b.square[36] = Piece.White | Piece.Bishop
 	num_squares_to_edge = compute_margin_to_edge()
 	
 	global to_move
 
 	print(all_possible_turns_player(to_move))
-	print(all_possible_turns_piece(27))
-	print(all_possible_turns_piece(36))
+	# print(all_possible_turns_piece(27))
+	# print(all_possible_turns_piece(36))
 
 	""" p = Piece.Black | Piece.King
 	print(p)
@@ -106,7 +106,21 @@ def generate_sliding_moves(start_sq: int, piece: Piece) -> [Move]:
 def generate_king_moves(start_sq: int, piece: Piece) -> [Move]:
 	"""Generates moves for Kings"""
 	moves = []
-	return moves # TODO Implement
+
+	global b
+
+	dire = [-7, -8, -9, -1, 1, 7, 8, 9]
+	for i in dire:
+		if not is_check(b):
+			target_sq = start_sq+i
+			if target_sq > -1 and target_sq < 64:
+				if not is_same_colour(piece, b.square[target_sq]):
+					moves.append(Move(start_sq, target_sq, get_move_notation(piece, start_sq, target_sq)))
+
+	# TODO: Promotion
+	# TODO the used check function above is not working yet
+
+	return moves
 
 
 def generate_pawn_moves(start_sq: int, piece: Piece) -> [Move]:
@@ -114,7 +128,7 @@ def generate_pawn_moves(start_sq: int, piece: Piece) -> [Move]:
 	moves = []
 	global b
 
-	if Piece.White in Piece:
+	if Piece.White in piece:
 		if start_sq//8 == 1:
 			if Piece.Empty in b.square[start_sq+8] and Piece.Empty in b.square[start_sq+16]:
 				moves.append(Move(start_sq, start_sq+16, get_move_notation(piece, start_sq, start_sq+16)))
@@ -155,7 +169,7 @@ def generate_pawn_moves(start_sq: int, piece: Piece) -> [Move]:
 		if len(last_move_str.replace("+", "")) == 2:
 			if abs(last_move.start_square - last_move.target_square) == 16:
 				# White
-				if Piece.White in Piece:
+				if Piece.White in piece:
 					# En passante from left
 					if start_sq+1 == last_move.target_square:
 						moves.append(Move(start_sq, start_sq+9, get_move_notation(piece, start_sq, start_sq+9)))
@@ -216,11 +230,11 @@ def generate_knight_moves(start_sq: int, piece: Piece) -> [Move]:
 	return moves
 
 
-def is_check(b: Board):
-	pass
+def is_check(b: Board) -> bool:
+	return False # TODO
 
 
-def is_checkmate(b: Board):
+def is_checkmate(b: Board) -> bool:
 	pass
 
 
