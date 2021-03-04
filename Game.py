@@ -6,11 +6,12 @@ from SpecialTurn import SpecialTurn
 b = Board()
 to_move = Piece.White
 num_squares_to_edge = [[]]
+all_moves = []
 
 def main():
 	global b
 
-	moves = []
+	global all_moves
 
 	global num_squares_to_edge
 	b.square[27] = Piece.White | Piece.Rook
@@ -111,7 +112,68 @@ def generate_king_moves(start_sq: int, piece: Piece) -> [Move]:
 def generate_pawn_moves(start_sq: int, piece: Piece) -> [Move]:
 	"""Generates moves for Pawns"""
 	moves = []
-	return moves # TODO Implement
+	global b
+
+	if Piece.White in Piece:
+		if start_sq//8 == 1:
+			if Piece.Empty in b.square[start_sq+8] and Piece.Empty in b.square[start_sq+16]:
+				moves.append(Move(start_sq, start_sq+16, get_move_notation(piece, start_sq, start_sq+16)))
+		
+		if Piece.Empty in b.square[start_sq+8]:
+			moves.append(Move(start_sq, start_sq+8, get_move_notation(piece, start_sq, start_sq+8)))
+
+		if start_sq % 8 != 0:
+			if is_same_colour(piece, b.square[start_sq+7]):
+				moves.append(Move(start_sq, start_sq+7, get_move_notation(piece, start_sq, start_sq+7)))
+
+		if start_sq % 8 != 7:
+			if is_different_colour(piece, b.square[start_sq+9]):
+				moves.append(Move(start_sq, start_sq+9, get_move_notation(piece, start_sq, start_sq+9)))
+
+	else:
+		if start_sq//8 == 6:
+			if Piece.Empty in b.square[start_sq-8] and Piece.Empty in b.square[start_sq-16]:
+				moves.append(Move(start_sq, start_sq-16, get_move_notation(piece, start_sq, start_sq-16)))
+		
+		if Piece.Empty in b.square[start_sq-8]:
+			moves.append(Move(start_sq, start_sq-8, get_move_notation(piece, start_sq, start_sq-8)))
+
+		if start_sq % 8 != 0:
+			if is_same_colour(piece, b.square[start_sq-9]):
+				moves.append(Move(start_sq, start_sq-9, get_move_notation(piece, start_sq, start_sq-9)))
+
+		if start_sq % 8 != 7:
+			if is_different_colour(piece, b.square[start_sq-7]):
+				moves.append(Move(start_sq, start_sq-7, get_move_notation(piece, start_sq, start_sq-7)))
+
+	global all_moves
+
+	# En passante
+	if len(all_moves) != 0:
+		last_move = all_moves[-1]
+		last_move_str = str(last_move.__str__)
+		if len(last_move_str.replace("+", "")) == 2:
+			if abs(last_move.start_square - last_move.target_square) == 16:
+				# White
+				if Piece.White in Piece:
+					# En passante from left
+					if start_sq+1 == last_move.target_square:
+						moves.append(Move(start_sq, start_sq+9, get_move_notation(piece, start_sq, start_sq+9)))
+					# En passante from right
+					elif start_sq-1 == last_move.target_square:
+						moves.append(Move(start_sq, start_sq+7, get_move_notation(piece, start_sq, start_sq+7)))
+				# Black
+				else:
+					# En passante from left
+					if start_sq+1 == last_move.target_square:
+						moves.append(Move(start_sq, start_sq-7, get_move_notation(piece, start_sq, start_sq-7)))
+					# En passante from right
+					elif start_sq-1 == last_move.target_square:
+						moves.append(Move(start_sq, start_sq-9, get_move_notation(piece, start_sq, start_sq-9)))
+
+	# TODO: Promotion; a bit tricky because it must be included in all the other existing things, four times for four different promotion pieces
+
+	return moves
 
 
 def generate_knight_moves(start_sq: int, piece: Piece) -> [Move]:
@@ -254,7 +316,7 @@ def get_move_notation(piece: Piece, start_sq: int, target_sq: int, special_turn:
 
 	if Piece.Pawn in piece:
 		if start_sq % 8 == target_sq % 8:
-			move_string = target_sq
+			move_string = target_sq_ind
 		elif abs((start_sq % 8) - (target_sq % 8)) == 1:
 			# Capture to the left
 			if (start_sq % 8) - (target_sq % 8) == 1:
