@@ -1,6 +1,7 @@
 from Board import Board
 from Piece import Piece
 from Move import Move
+from SpecialTurn import SpecialTurn
 
 b = Board()
 to_move = Piece.White
@@ -184,19 +185,38 @@ def is_sliding_piece(piece: Piece):
 	return Piece.Rook in piece or Piece.Bishop in piece or Piece.Queen in piece
 
 
-def get_move_notation(piece: Piece, start_sq: int, target_sq: int) -> str:
+def get_move_notation(piece: Piece, start_sq: int, target_sq: int, special_turn: SpecialTurn = None, is_check : bool = False, is_checkmate = False) -> str:
 	"""This method returns a string of algebraic chess notation for a move"""
 	start_sq_ind = index_to_square_name(start_sq)
 	target_sq_ind = index_to_square_name(target_sq)
 
 	# TODO Please note: This function is programmed in a way to calculate the notation __before__ the move happens
-	# TODO Does not include check, checkmate, castling or promotion yet
+	# TODO Does not include promotion yet
+	# TODO Please note: This function does not handle ambiguatiy yet (e.g. if two rooks could have moved to a square)
 
-	#print(piece)
+	check_string = ""
+	if is_checkmate:
+		check_string = "#"
+	elif is_check:
+		check_string = "+"
+
+	promotion_string = ""
+	
+	if special_turn is not None:
+		if SpecialTurn.PromoteQueen in special_turn:
+			promotion_string = "=Q"
+		elif SpecialTurn.PromoteRook in special_turn:
+			promotion_string = "=R"
+		elif SpecialTurn.PromoteBishop in special_turn:
+			promotion_string = "=B"
+		elif SpecialTurn.PromoteKnight in special_turn:
+			promotion_string = "=K"
+
+	move_string = ""
+
 	if Piece.Pawn in piece:
-		# TODO Promoting pieces missing
 		if start_sq % 8 == target_sq % 8:
-			return target_sq
+			move_string = target_sq
 		elif abs((start_sq % 8) - (target_sq % 8)) == 1:
 			# Capture to the left
 			if (start_sq % 8) - (target_sq % 8) == 1:
@@ -204,7 +224,7 @@ def get_move_notation(piece: Piece, start_sq: int, target_sq: int) -> str:
 				if (start_sq % 8) != 1:
 					# If other pawn was able to do it
 					if Piece.Pawn in b.square[start_sq-2]:
-						return start_sq_ind+"x"+target_sq_ind
+						move_string = start_sq_ind+"x"+target_sq_ind
 					else:
 						"x"+target_sq_ind
 				else:
@@ -215,7 +235,7 @@ def get_move_notation(piece: Piece, start_sq: int, target_sq: int) -> str:
 				if (start_sq % 8) != 6:
 					# If other pawn was able to do it
 					if Piece.Pawn in b.square[start_sq+2]:
-						return start_sq_ind+"x"+target_sq_ind
+						move_string = start_sq_ind+"x"+target_sq_ind
 					else:
 						"x"+target_sq_ind
 				else:
@@ -223,41 +243,53 @@ def get_move_notation(piece: Piece, start_sq: int, target_sq: int) -> str:
 
 
 	elif Piece.King in piece:
-		if Piece.Empty not in b.square[target_sq]:
-			return "Kx" + target_sq_ind
-		else:
-			return "K" + target_sq_ind
+		castled = False
+		if special_turn is not None:
+			if SpecialTurn.CastlingLong in special_turn:
+				castled = True
+				move_string = "O-O-O"
+			elif SpecialTurn.CastlingShort in special_turn:
+				move_string = "O-O"
+				castled = True
+		
+		if not castled:
+			if Piece.Empty not in b.square[target_sq]:
+				move_string = "Kx" + target_sq_ind
+			else:
+				move_string = "K" + target_sq_ind
 
 	elif Piece.Queen in piece:
 		# TODO Fix ambiguatiy if two Queens where able to get here
 		if Piece.Empty not in b.square[target_sq]:
-			return "Qx" + target_sq_ind
+			move_string = "Qx" + target_sq_ind
 		else:
-			return "Q" + target_sq_ind
+			move_string = "Q" + target_sq_ind
 
 	elif Piece.Rook in piece:
 		# TODO Fix ambiguatiy if two Rooks where able to get here
 		if Piece.Empty not in b.square[target_sq]:
-			return "Rx" + target_sq_ind
+			move_string = "Rx" + target_sq_ind
 		else:
-			return "R" + target_sq_ind
+			move_string = "R" + target_sq_ind
 
 	elif Piece.Bishop in piece:
 		# TODO Fix ambiguatiy if two Bishops where able to get here
 		if Piece.Empty not in b.square[target_sq]:
-			return "Bx" + target_sq_ind
+			move_string = "Bx" + target_sq_ind
 		else:
-			return "B" + target_sq_ind
+			move_string = "B" + target_sq_ind
 
 	elif Piece.Knight in piece:
 		# TODO Fix ambiguatiy if two Knight where able to get here
 		if Piece.Empty not in b.square[target_sq]:
-			return "Nx" + target_sq_ind
+			move_string = "Nx" + target_sq_ind
 		else:
-			return "N" + target_sq_ind
+			move_string = "N" + target_sq_ind
 
 	else:
-		return ""
+		move_string = ""
+
+	return move_string + promotion_string + check_string
 
 def index_to_square_name(ind: int) -> str:
 	"""Returns the name of a square (e.g. A4) for any index on the board """
@@ -286,14 +318,14 @@ def castle(player_to_move: Piece, long: bool) -> bool:
 				return False
 			else:
 				pass
-				# TODO Check other conditions: King not moving over check-fields
+				# TODO Check other conditions: King not moving over check-squares
 		else:
 			# Short
 			if b.moved_rook_white_h1:
 				return False
 			else:
 				pass
-				# TODO Check other conditions: King not moving over check-fields
+				# TODO Check other conditions: King not moving over check-squares
 	else:
 		# Black Player
 		if b.moved_king_black:
@@ -303,14 +335,14 @@ def castle(player_to_move: Piece, long: bool) -> bool:
 				return False
 			else:
 				pass
-				# TODO Check other conditions: King not moving over check-fields
+				# TODO Check other conditions: King not moving over check-squares
 		else:
 			# Short
 			if b.moved_rook_black_h8:
 				return False
 			else:
 				pass
-				# TODO Check other conditions: King not moving over check-fields
+				# TODO Check other conditions: King not moving over check-squares
 		
 	
 
