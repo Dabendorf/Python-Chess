@@ -4,34 +4,36 @@ from Move import Move
 from SpecialTurn import SpecialTurn
 
 b = Board()
-to_move = Piece.Black
+to_move = Piece.White
 num_squares_to_edge = [[]]
 all_moves = []
 
 def main():
 	global b
-
 	global all_moves
-
-	global num_squares_to_edge
-	# b.square[27] = Piece.White | Piece.Rook
-	# b.square[36] = Piece.White | Piece.Bishop
-	num_squares_to_edge = compute_margin_to_edge()
-	
 	global to_move
+	global num_squares_to_edge
 
-	print(all_possible_turns_player(to_move))
-	# print(all_possible_turns_piece(27))
-	# print(all_possible_turns_piece(36))
-
-	""" p = Piece.Black | Piece.King
-	print(p)
-	print(Piece.Black in p)
-	print(Piece.King in p)
-	print(Piece.White in p)
-	print(Piece.Knight in p) """
+	num_squares_to_edge = compute_margin_to_edge()
+	print("Possible moves: "+str(all_possible_turns_player(to_move)))
+	# thats a temporary test structure for some example moves
 	
-	b.print_board()
+	moves_to_do_list = [(14, 22), (52, 36), (5, 14)]
+
+	for st, tg in moves_to_do_list:
+		print("Turn "+get_move_notation(b.square[st], st, tg)+" legal: "+str(move(st, tg)))
+		b.print_board()
+
+		if to_move == Piece.White:
+			to_move = Piece.Black
+		else:
+			to_move = Piece.White
+		
+		print("========")
+		num_squares_to_edge = compute_margin_to_edge()
+		print("Possible moves: "+str(all_possible_turns_player(to_move)))
+
+
 
 def is_legal(piece: Piece):
 	pass
@@ -95,7 +97,6 @@ def generate_sliding_moves(start_sq: int, piece: Piece) -> [Move]:
 				break
 
 			moves.append(Move(start_sq, target_sq, get_move_notation(piece, start_sq, target_sq)))
-			# moves.append(Move(start_sq, target_sq, ""))
 
 			if is_different_colour(piece, target_sq_piece):
 				break
@@ -117,7 +118,7 @@ def generate_king_moves(start_sq: int, piece: Piece) -> [Move]:
 				if not is_same_colour(piece, b.square[target_sq]):
 					moves.append(Move(start_sq, target_sq, get_move_notation(piece, start_sq, target_sq)))
 
-	# TODO: Promotion
+	# TODO: Rochade
 	# TODO the used check function above is not working yet
 
 	return moves
@@ -238,18 +239,27 @@ def is_checkmate(b: Board) -> bool:
 	pass
 
 
-def move(p: Piece):
-	if is_sliding_piece(p):
-		pass
-	elif Piece.Pawn in p:
-		pass
-	elif Piece.King in p:
-		pass
-	elif Piece.Knight in p:
-		pass
-	pass
-	# Rook: +8, -8, +1, -1
-	# Bishop: 7, 9, -9, -7
+def move(start_sq, target_sq) -> bool:
+	"""Makes a move on the board, returns bool if successfull (false=illegal)"""
+	global b
+	global all_moves
+
+	if to_move not in b.square[start_sq]:
+		return False
+
+	new_move = Move(start_sq, target_sq, get_move_notation(b.square[start_sq], start_sq, target_sq))
+
+	poss_moves = all_possible_turns_piece(start_sq)
+	
+	if new_move in poss_moves:
+		all_moves.append(new_move)
+		b.square[target_sq] = b.square[start_sq]
+		b.square[start_sq] = Piece.Empty
+
+		return True
+	else:
+		return False
+
 
 
 def compute_margin_to_edge() -> [[int]]:

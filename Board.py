@@ -54,7 +54,11 @@ class Board:
 
 
 	def print_board(self):
+		print("–"*17)
 		for x in range(7,-1,-1):
+			print("|", end="")
 			for y in range(0,8):
 				print(self.piece_to_letter(self.square[8*x+y]), end="")
+				print("|", end="")
 			print("")
+			print("–"*17)
