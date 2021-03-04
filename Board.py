@@ -2,6 +2,12 @@ from Piece import Piece
 
 class Board:
 	square : [Piece] = []
+	moved_king_white = False
+	moved_king_black = False
+	moved_rook_white_a1 = False
+	moved_rook_white_h1 = False
+	moved_rook_black_a8 = False
+	moved_rook_black_h8 = False
 
 	def __init__(self):
 		self.square = [Piece.Empty] * 64

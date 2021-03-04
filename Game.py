@@ -10,6 +10,7 @@ def main():
 	global b
 
 	moves = []
+
 	global num_squares_to_edge
 	b.square[27] = Piece.White | Piece.Rook
 	b.square[36] = Piece.White | Piece.Bishop
@@ -40,11 +41,11 @@ def all_possible_turns_piece(start_sq: int) -> [Move]:
 	if is_sliding_piece(piece):
 		moves.extend(generate_sliding_moves(start_sq, piece))
 	elif Piece.King in piece:
-		move.extend(generate_king_moves(start_sq, piece))
+		moves.extend(generate_king_moves(start_sq, piece))
 	elif Piece.Pawn in piece:
-		move.extend(generate_pawn_moves(start_sq, piece))
+		moves.extend(generate_pawn_moves(start_sq, piece))
 	elif Piece.Knight in piece:
-		move.extend(generate_knight_moves(start_sq, piece))
+		moves.extend(generate_knight_moves(start_sq, piece))
 
 	return moves
 
@@ -264,6 +265,57 @@ def index_to_square_name(ind: int) -> str:
 
 	#return ""
 	return num_dict[ind%8]+str(int(ind/8)+1)
+
+def castle(player_to_move: Piece, long: bool) -> bool:
+	"""Möglich wenn: der König noch nicht gezogen wurde,
+    der beteiligte Turm noch nicht gezogen wurde,
+    zwischen dem König und dem beteiligten Turm keine andere Figur steht,
+    der König über kein Feld ziehen muss, das durch eine feindliche Figur bedroht wird,
+    der König vor und nach Ausführung der Rochade nicht im Schach steht."""
+	
+	global b
+
+	if is_check(b):
+		return False
+	elif Piece.White in player_to_move:
+		# White Player
+		if b.moved_king_white:
+			return False
+		elif long:
+			if b.moved_rook_white_a1:
+				return False
+			else:
+				pass
+				# TODO Check other conditions: King not moving over check-fields
+		else:
+			# Short
+			if b.moved_rook_white_h1:
+				return False
+			else:
+				pass
+				# TODO Check other conditions: King not moving over check-fields
+	else:
+		# Black Player
+		if b.moved_king_black:
+			return False
+		elif long:
+			if b.moved_rook_black_a8:
+				return False
+			else:
+				pass
+				# TODO Check other conditions: King not moving over check-fields
+		else:
+			# Short
+			if b.moved_rook_black_h8:
+				return False
+			else:
+				pass
+				# TODO Check other conditions: King not moving over check-fields
+		
+	
+
+	# TODO Proof of all the named conditions and the booleans
+	pass
 
 
 if __name__ == "__main__":
