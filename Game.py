@@ -64,10 +64,14 @@ def all_possible_turns_player(player_to_move: Piece) -> [Move]:
 		if(is_same_colour(b.square[i], player_to_move)):
 			if is_sliding_piece(b.square[i]):
 				moves.extend(generate_sliding_moves(i, b.square[i]))
+			elif Piece.King in b.square[i]:
+				moves.extend(generate_king_moves(i, b.square[i]))
+			elif Piece.Pawn in b.square[i]:
+				moves.extend(generate_pawn_moves(i, b.square[i]))
+			elif Piece.Knight in b.square[i]:
+				moves.extend(generate_knight_moves(i, b.square[i]))
 
 	return moves
-
-	# TODO weitere Pieces hinzufügen
 
 
 def generate_sliding_moves(start_sq: int, piece: Piece) -> [Move]:
@@ -113,7 +117,41 @@ def generate_pawn_moves(start_sq: int, piece: Piece) -> [Move]:
 def generate_knight_moves(start_sq: int, piece: Piece) -> [Move]:
 	"""Generates moves for Knights"""
 	moves = []
-	return moves # TODO Implement
+	global b
+
+	# Up
+	if start_sq % 8 != 0 and start_sq//8 < 6:
+		if not is_same_colour(piece, b.square[start_sq+15]):
+			moves.append(Move(start_sq, start_sq+15, get_move_notation(piece, start_sq, start_sq+15)))
+	if start_sq % 8 != 7 and start_sq//8 < 6:
+		if not is_same_colour(piece, b.square[start_sq+17]):
+			moves.append(Move(start_sq, start_sq+17, get_move_notation(piece, start_sq, start_sq+17)))
+
+	# Right
+	if start_sq % 8 < 6 and start_sq//8 != 7:
+		if not is_same_colour(piece, b.square[start_sq+10]):
+			moves.append(Move(start_sq, start_sq+10, get_move_notation(piece, start_sq, start_sq+10)))
+	if start_sq % 8 < 6 and start_sq//8 != 0:
+		if not is_same_colour(piece, b.square[start_sq-6]):
+			moves.append(Move(start_sq, start_sq-6, get_move_notation(piece, start_sq, start_sq-6)))
+
+	# Down
+	if start_sq % 8 != 0 and start_sq//8 > 1:
+		if not is_same_colour(piece, b.square[start_sq-17]):
+			moves.append(Move(start_sq, start_sq-17, get_move_notation(piece, start_sq, start_sq-17)))
+	if start_sq % 8 != 7 and start_sq//8 > 1:
+		if not is_same_colour(piece, b.square[start_sq-15]):
+			moves.append(Move(start_sq, start_sq-15, get_move_notation(piece, start_sq, start_sq-15)))
+
+	# Left
+	if start_sq % 8 > 1 and start_sq//8 != 0:
+		if not is_same_colour(piece, b.square[start_sq-10]):
+			moves.append(Move(start_sq, start_sq-10, get_move_notation(piece, start_sq, start_sq-10)))
+	if start_sq % 8 > 1 and start_sq//8 != 7:
+		if not is_same_colour(piece, b.square[start_sq+6]):
+			moves.append(Move(start_sq, start_sq+6, get_move_notation(piece, start_sq, start_sq+6)))
+	
+	return moves
 
 
 def is_check(b: Board):
