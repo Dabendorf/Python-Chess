@@ -20,7 +20,7 @@ def main():
 	pygame.init()
 	screen = pygame.display.set_mode((700,700))
 	pygame.display.set_caption("Pythonic Chess")
-	screen.fill((0,0,0))
+	screen.fill((60,60,60))
 
 	num_squares_to_edge = compute_margin_to_edge()
 	print("Possible moves: "+str(all_possible_turns_player(to_move)))
@@ -55,7 +55,7 @@ def main():
 		pygame.time.wait(1000)
 		pygame.display.update()
 		pygame.display.flip()
-		screen.fill((0,0,0))
+		screen.fill((60,60,60))
 
 
 def is_legal(piece: Piece):
@@ -447,10 +447,10 @@ def index_to_square_name(ind: int) -> str:
 
 def castle(player_to_move: Piece, long: bool) -> bool:
 	"""Möglich wenn: der König noch nicht gezogen wurde,
-    der beteiligte Turm noch nicht gezogen wurde,
-    zwischen dem König und dem beteiligten Turm keine andere Figur steht,
-    der König über kein Feld ziehen muss, das durch eine feindliche Figur bedroht wird,
-    der König vor und nach Ausführung der Rochade nicht im Schach steht."""
+	der beteiligte Turm noch nicht gezogen wurde,
+	zwischen dem König und dem beteiligten Turm keine andere Figur steht,
+	der König über kein Feld ziehen muss, das durch eine feindliche Figur bedroht wird,
+	der König vor und nach Ausführung der Rochade nicht im Schach steht."""
 	
 	global b
 
@@ -498,9 +498,24 @@ def castle(player_to_move: Piece, long: bool) -> bool:
 
 def draw(board, screen):
 	"""This method draws the board as designed"""
+	xsize = screen.get_height()//8
+	ysize = screen.get_width()//8
+	off = 5 #offset between singel squares
+	font = pygame.font.Font(None, 36)
+	for i in range(8):
+		for j in range(8):
+			val = 255*((i+j)%2)
+			colour = (val,val,val)
+			rect = pygame.Rect(xsize*j+off,ysize*i+off,xsize-off,ysize-off)
+			pygame.draw.rect(screen, colour, rect)
+
+			text = font.render("A", 1, (10, 10, 10))
+			textpos = text.get_rect()
+			textpos.centerx = rect.centerx
+			textpos.centery = rect.centery
+			screen.blit(text, textpos)
 
 	
-	pass
 
 if __name__ == "__main__":
 	main()
