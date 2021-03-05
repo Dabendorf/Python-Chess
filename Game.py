@@ -507,12 +507,12 @@ def draw(board, screen):
 	font = pygame.font.Font(None, 42)
 	for i in range(8):
 		for j in range(8):
-			val = 255*((i+j)%2)
+			val = 255*((i+j+1)%2)
 			colour = (val,val,val)
 			rect = pygame.Rect(xsize*j+off,ysize*i+off,xsize-off,ysize-off)
 			pygame.draw.rect(screen, colour, rect)
 
-			text = font.render(Board.piece_to_letter(board.square[(i*8)+j]),1, (90, 90, 90))
+			text = font.render(Board.piece_to_letter(board.square[((7-i)*8)+(j)]),1, (90, 90, 90))
 			textpos = text.get_rect()
 			textpos.centerx = rect.centerx
 			textpos.centery = rect.centery
