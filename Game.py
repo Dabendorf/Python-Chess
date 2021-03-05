@@ -2,6 +2,7 @@ from Board import Board
 from Piece import Piece
 from Move import Move
 from SpecialTurn import SpecialTurn
+import pygame
 
 #global variables are evil and need to go
 b = Board()
