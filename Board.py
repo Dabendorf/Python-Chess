@@ -36,29 +36,28 @@ class Board:
 		self.square[62] = Piece.Black | Piece.Knight
 		self.square[63] = Piece.Black | Piece.Rook
 
-	def piece_to_letter_colourless(self, piece: Piece):
-		letter_dict = {Piece.Rook : "r", Piece.Knight : "n", Piece.Bishop : "b", Piece.Queen: "q", Piece.King : "k", Piece.Pawn : "p", Piece.Empty : " "}
-
-		for key, value in letter_dict.items():
-			if key in piece:
-				return value
-	
-
-	def piece_to_letter(self, piece: Piece):
-		if Piece.White in piece:
-			return self.piece_to_letter_colourless(piece).upper()
-		elif Piece.Black in piece:
-			return self.piece_to_letter_colourless(piece)
-		else:
-			return self.piece_to_letter_colourless(piece)
-
-
 	def print_board(self):
 		print("–"*17)
 		for x in range(7,-1,-1):
 			print("|", end="")
 			for y in range(0,8):
-				print(self.piece_to_letter(self.square[8*x+y]), end="")
+				print(piece_to_letter(self.square[8*x+y]), end="")
 				print("|", end="")
 			print("")
 			print("–"*17)
+
+
+def piece_to_letter_colourless(piece: Piece):
+	letter_dict = {Piece.Rook : "r", Piece.Knight : "n", Piece.Bishop : "b", Piece.Queen: "q", Piece.King : "k", Piece.Pawn : "p", Piece.Empty : " "}
+
+	for key, value in letter_dict.items():
+		if key in piece:
+			return value
+
+def piece_to_letter(piece: Piece):
+	if Piece.White in piece:
+		return piece_to_letter_colourless(piece).upper()
+	elif Piece.Black in piece:
+		return piece_to_letter_colourless(piece)
+	else:
+		return piece_to_letter_colourless(piece)
