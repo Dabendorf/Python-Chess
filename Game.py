@@ -3,6 +3,7 @@ from Piece import Piece
 from Move import Move
 from SpecialTurn import SpecialTurn
 
+#global variables are evil and need to go
 b = Board()
 to_move = Piece.White
 num_squares_to_edge = [[]]
