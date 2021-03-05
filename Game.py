@@ -1,11 +1,11 @@
-from Board import Board
+import Board
 from Piece import Piece
 from Move import Move
 from SpecialTurn import SpecialTurn
 import pygame
 
 #global variables are evil and need to go
-b = Board()
+b = Board.Board()
 to_move = Piece.White
 num_squares_to_edge = [[]]
 all_moves = []
@@ -21,6 +21,9 @@ def main():
 	screen = pygame.display.set_mode((700,700))
 	pygame.display.set_caption("Pythonic Chess")
 	screen.fill((60,60,60))
+	draw(b,screen)
+	pygame.display.update()
+	pygame.display.flip()
 
 	num_squares_to_edge = compute_margin_to_edge()
 	print("Possible moves: "+str(all_possible_turns_player(to_move)))
@@ -31,8 +34,6 @@ def main():
 	#Attention this test-loop is now used ad the pygame-mainloop
 	#Further changes here need to be well thought through
 	for st, tg in moves_to_do_list:
-		#this is the real draw method
-		draw(b,screen)
 		#Event-Loop
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
@@ -40,6 +41,8 @@ def main():
 		
 		print("Turn "+get_move_notation(b.square[st], st, tg)+" legal: "+str(move(st, tg)))
 		b.print_board()
+		draw(b,screen)
+		pygame.display.update()
 
 		
 		if to_move == Piece.White:
@@ -52,10 +55,10 @@ def main():
 		print("Possible moves: "+str(all_possible_turns_player(to_move)))
 
 		#NextFrameSetUp
-		pygame.time.wait(1000)
-		pygame.display.update()
 		pygame.display.flip()
 		screen.fill((60,60,60))
+		pygame.time.wait(3000)
+
 
 
 def is_legal(piece: Piece):
@@ -501,7 +504,7 @@ def draw(board, screen):
 	xsize = screen.get_height()//8
 	ysize = screen.get_width()//8
 	off = 5 #offset between singel squares
-	font = pygame.font.Font(None, 36)
+	font = pygame.font.Font(None, 42)
 	for i in range(8):
 		for j in range(8):
 			val = 255*((i+j)%2)
@@ -509,7 +512,7 @@ def draw(board, screen):
 			rect = pygame.Rect(xsize*j+off,ysize*i+off,xsize-off,ysize-off)
 			pygame.draw.rect(screen, colour, rect)
 
-			text = font.render("A", 1, (10, 10, 10))
+			text = font.render(Board.piece_to_letter(board.square[(i*8)+j]),1, (90, 90, 90))
 			textpos = text.get_rect()
 			textpos.centerx = rect.centerx
 			textpos.centery = rect.centery
