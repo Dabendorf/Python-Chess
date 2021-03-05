@@ -16,16 +16,32 @@ def main():
 	global to_move
 	global num_squares_to_edge
 
+	#pygame setup
+	pygame.init()
+	screen = pygame.display.set_mode((700,700))
+	pygame.display.set_caption("Pythonic Chess")
+	screen.fill((0,0,0))
+
 	num_squares_to_edge = compute_margin_to_edge()
 	print("Possible moves: "+str(all_possible_turns_player(to_move)))
 	# thats a temporary test structure for some example moves
 	
 	moves_to_do_list = [(14, 22), (52, 36), (5, 14)]
 
+	#Attention this test-loop is now used ad the pygame-mainloop
+	#Further changes here need to be well thought through
 	for st, tg in moves_to_do_list:
+		#this is the real draw method
+		draw(b,screen)
+		#Event-Loop
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				return
+		
 		print("Turn "+get_move_notation(b.square[st], st, tg)+" legal: "+str(move(st, tg)))
 		b.print_board()
 
+		
 		if to_move == Piece.White:
 			to_move = Piece.Black
 		else:
@@ -35,6 +51,11 @@ def main():
 		num_squares_to_edge = compute_margin_to_edge()
 		print("Possible moves: "+str(all_possible_turns_player(to_move)))
 
+		#NextFrameSetUp
+		pygame.time.wait(1000)
+		pygame.display.update()
+		pygame.display.flip()
+		screen.fill((0,0,0))
 
 
 def is_legal(piece: Piece):
@@ -475,6 +496,11 @@ def castle(player_to_move: Piece, long: bool) -> bool:
 	# TODO Proof of all the named conditions and the booleans
 	pass
 
+def draw(board, screen):
+	"""This method draws the board as designed"""
+
+	
+	pass
 
 if __name__ == "__main__":
 	main()
