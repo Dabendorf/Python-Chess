@@ -24,6 +24,7 @@ def main():
 	draw(b,screen)
 	pygame.display.update()
 	pygame.display.flip()
+	pygame.mixer.pre_init(44100, -16, 2, 2048)
 
 	num_squares_to_edge = compute_margin_to_edge()
 	print("Possible moves: "+str(all_possible_turns_player(to_move)))
@@ -43,6 +44,11 @@ def main():
 		b.print_board()
 		draw(b,screen)
 		pygame.display.update()
+
+		# Source: https://github.com/ornicar/lila/tree/38bfadac3e319516341771086e8edc594d4d4b07/public/sound
+		pygame.mixer.init()
+		pygame.mixer.music.load('files/turn.ogg')
+		pygame.mixer.music.play()
 
 		
 		if to_move == Piece.White:
