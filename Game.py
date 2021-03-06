@@ -4,17 +4,11 @@ from Move import Move
 from SpecialTurn import SpecialTurn
 import pygame
 
-#global variables are evil and need to go
-b = Board.Board()
-to_move = Piece.White
-num_squares_to_edge = [[]]
-all_moves = []
-
 def main():
-	global b
-	global all_moves
-	global to_move
-	global num_squares_to_edge
+	b = Board.Board()
+	to_move = Piece.White
+	num_squares_to_edge = [[]]
+	all_moves = []
 
 	#pygame setup
 	pygame.init()
@@ -27,7 +21,7 @@ def main():
 	pygame.mixer.pre_init(44100, -16, 2, 2048)
 
 	num_squares_to_edge = compute_margin_to_edge()
-	print("Possible moves: "+str(all_possible_turns_player(to_move)))
+	print("Possible moves: "+str(all_possible_turns_player(to_move, b, all_moves, num_squares_to_edge)))
 	# thats a temporary test structure for some example moves
 	
 	moves_to_do_list = [(14, 22), (52, 36), (5, 14)]
@@ -40,7 +34,7 @@ def main():
 			if event.type == pygame.QUIT:
 				return
 		
-		print("Turn "+get_move_notation(b.square[st], st, tg)+" legal: "+str(move(st, tg)))
+		print("Turn "+get_move_notation(b.square[st], st, tg, b)+" legal: "+str(move(st, tg, b, all_moves, to_move, num_squares_to_edge)))
 		b.print_board()
 		draw(b,screen)
 		pygame.display.update()
@@ -55,7 +49,7 @@ def main():
 		
 		print("========")
 		num_squares_to_edge = compute_margin_to_edge()
-		print("Possible moves: "+str(all_possible_turns_player(to_move)))
+		print("Possible moves: "+str(all_possible_turns_player(to_move, b, all_moves, num_squares_to_edge)))
 
 		#NextFrameSetUp
 		pygame.display.flip()
@@ -67,16 +61,16 @@ def main():
 def is_legal(piece: Piece):
 	pass
 
-def all_possible_turns_piece(start_sq: int) -> [Move]:
+def all_possible_turns_piece(start_sq: int, all_moves: [Move], num_squares_to_edge: [[]], b: Board) -> [Move]:
 	piece = b.square[start_sq]
 	moves = []
 
 	if is_sliding_piece(piece):
-		moves.extend(generate_sliding_moves(start_sq, piece))
+		moves.extend(generate_sliding_moves(start_sq, piece, b, num_squares_to_edge))
 	elif Piece.King in piece:
-		moves.extend(generate_king_moves(start_sq, piece))
+		moves.extend(generate_king_moves(start_sq, piece, b))
 	elif Piece.Pawn in piece:
-		moves.extend(generate_pawn_moves(start_sq, piece))
+		moves.extend(generate_pawn_moves(start_sq, piece, b, all_moves))
 	elif Piece.Knight in piece:
 		moves.extend(generate_knight_moves(start_sq, piece))
 
@@ -84,29 +78,28 @@ def all_possible_turns_piece(start_sq: int) -> [Move]:
 
 	# TODO More pieces
 
-def all_possible_turns_player(player_to_move: Piece) -> [Move]:
+def all_possible_turns_player(player_to_move: Piece, b: Board, all_moves: [Move], num_squares_to_edge: [[]]) -> [Move]:
 	# for every piece, if colour of player to move
 	# if own piece in way, change searching direction
 	# if opponent's piece in way, capture it, then change direction
 
-	global b
 	moves = []
 
 	for i in range(0, 64):
 		if(is_same_colour(b.square[i], player_to_move)):
 			if is_sliding_piece(b.square[i]):
-				moves.extend(generate_sliding_moves(i, b.square[i]))
+				moves.extend(generate_sliding_moves(i, b.square[i], b, num_squares_to_edge))
 			elif Piece.King in b.square[i]:
-				moves.extend(generate_king_moves(i, b.square[i]))
+				moves.extend(generate_king_moves(i, b.square[i], b))
 			elif Piece.Pawn in b.square[i]:
-				moves.extend(generate_pawn_moves(i, b.square[i]))
+				moves.extend(generate_pawn_moves(i, b.square[i], b, all_moves))
 			elif Piece.Knight in b.square[i]:
-				moves.extend(generate_knight_moves(i, b.square[i]))
+				moves.extend(generate_knight_moves(i, b.square[i], b))
 
 	return moves
 
 
-def generate_sliding_moves(start_sq: int, piece: Piece) -> [Move]:
+def generate_sliding_moves(start_sq: int, piece: Piece, b: Board, num_squares_to_edge: [[]]) -> [Move]:
 	"""Generates moves for Rooks, Bishops and Queens"""
 	direction_offsets = [8, -8, -1, 1, 7, -7, 9, -9]
 	moves = []
@@ -125,7 +118,7 @@ def generate_sliding_moves(start_sq: int, piece: Piece) -> [Move]:
 			if is_same_colour(piece, target_sq_piece):
 				break
 
-			moves.append(Move(start_sq, target_sq, get_move_notation(piece, start_sq, target_sq)))
+			moves.append(Move(start_sq, target_sq, get_move_notation(piece, start_sq, target_sq, b)))
 
 			if is_different_colour(piece, target_sq_piece):
 				break
@@ -133,11 +126,9 @@ def generate_sliding_moves(start_sq: int, piece: Piece) -> [Move]:
 	return moves
 
 			
-def generate_king_moves(start_sq: int, piece: Piece) -> [Move]:
+def generate_king_moves(start_sq: int, piece: Piece, b: Board) -> [Move]:
 	"""Generates moves for Kings"""
 	moves = []
-
-	global b
 
 	dire = [-7, -8, -9, -1, 1, 7, 8, 9]
 	for i in dire:
@@ -145,7 +136,7 @@ def generate_king_moves(start_sq: int, piece: Piece) -> [Move]:
 			target_sq = start_sq+i
 			if target_sq > -1 and target_sq < 64:
 				if not is_same_colour(piece, b.square[target_sq]):
-					moves.append(Move(start_sq, target_sq, get_move_notation(piece, start_sq, target_sq)))
+					moves.append(Move(start_sq, target_sq, get_move_notation(piece, start_sq, target_sq, b)))
 
 	# TODO: Rochade
 	# TODO the used check function above is not working yet
@@ -153,44 +144,41 @@ def generate_king_moves(start_sq: int, piece: Piece) -> [Move]:
 	return moves
 
 
-def generate_pawn_moves(start_sq: int, piece: Piece) -> [Move]:
+def generate_pawn_moves(start_sq: int, piece: Piece, b: Board, all_moves: [Move]) -> [Move]:
 	"""Generates moves for Pawns"""
 	moves = []
-	global b
 
 	if Piece.White in piece:
 		if start_sq//8 == 1:
 			if Piece.Empty in b.square[start_sq+8] and Piece.Empty in b.square[start_sq+16]:
-				moves.append(Move(start_sq, start_sq+16, get_move_notation(piece, start_sq, start_sq+16)))
+				moves.append(Move(start_sq, start_sq+16, get_move_notation(piece, start_sq, start_sq+16, b)))
 		
 		if Piece.Empty in b.square[start_sq+8]:
-			moves.append(Move(start_sq, start_sq+8, get_move_notation(piece, start_sq, start_sq+8)))
+			moves.append(Move(start_sq, start_sq+8, get_move_notation(piece, start_sq, start_sq+8, b)))
 
 		if start_sq % 8 != 0:
 			if is_same_colour(piece, b.square[start_sq+7]):
-				moves.append(Move(start_sq, start_sq+7, get_move_notation(piece, start_sq, start_sq+7)))
+				moves.append(Move(start_sq, start_sq+7, get_move_notation(piece, start_sq, start_sq+7, b)))
 
 		if start_sq % 8 != 7:
 			if is_different_colour(piece, b.square[start_sq+9]):
-				moves.append(Move(start_sq, start_sq+9, get_move_notation(piece, start_sq, start_sq+9)))
+				moves.append(Move(start_sq, start_sq+9, get_move_notation(piece, start_sq, start_sq+9, b)))
 
 	else:
 		if start_sq//8 == 6:
 			if Piece.Empty in b.square[start_sq-8] and Piece.Empty in b.square[start_sq-16]:
-				moves.append(Move(start_sq, start_sq-16, get_move_notation(piece, start_sq, start_sq-16)))
+				moves.append(Move(start_sq, start_sq-16, get_move_notation(piece, start_sq, start_sq-16, b)))
 		
 		if Piece.Empty in b.square[start_sq-8]:
-			moves.append(Move(start_sq, start_sq-8, get_move_notation(piece, start_sq, start_sq-8)))
+			moves.append(Move(start_sq, start_sq-8, get_move_notation(piece, start_sq, start_sq-8, b)))
 
 		if start_sq % 8 != 0:
 			if is_same_colour(piece, b.square[start_sq-9]):
-				moves.append(Move(start_sq, start_sq-9, get_move_notation(piece, start_sq, start_sq-9)))
+				moves.append(Move(start_sq, start_sq-9, get_move_notation(piece, start_sq, start_sq-9, b)))
 
 		if start_sq % 8 != 7:
 			if is_different_colour(piece, b.square[start_sq-7]):
-				moves.append(Move(start_sq, start_sq-7, get_move_notation(piece, start_sq, start_sq-7)))
-
-	global all_moves
+				moves.append(Move(start_sq, start_sq-7, get_move_notation(piece, start_sq, start_sq-7, b)))
 
 	# En passante
 	if len(all_moves) != 0:
@@ -202,60 +190,59 @@ def generate_pawn_moves(start_sq: int, piece: Piece) -> [Move]:
 				if Piece.White in piece:
 					# En passante from left
 					if start_sq+1 == last_move.target_square:
-						moves.append(Move(start_sq, start_sq+9, get_move_notation(piece, start_sq, start_sq+9)))
+						moves.append(Move(start_sq, start_sq+9, get_move_notation(piece, start_sq, start_sq+9, b)))
 					# En passante from right
 					elif start_sq-1 == last_move.target_square:
-						moves.append(Move(start_sq, start_sq+7, get_move_notation(piece, start_sq, start_sq+7)))
+						moves.append(Move(start_sq, start_sq+7, get_move_notation(piece, start_sq, start_sq+7, b)))
 				# Black
 				else:
 					# En passante from left
 					if start_sq+1 == last_move.target_square:
-						moves.append(Move(start_sq, start_sq-7, get_move_notation(piece, start_sq, start_sq-7)))
+						moves.append(Move(start_sq, start_sq-7, get_move_notation(piece, start_sq, start_sq-7, b)))
 					# En passante from right
 					elif start_sq-1 == last_move.target_square:
-						moves.append(Move(start_sq, start_sq-9, get_move_notation(piece, start_sq, start_sq-9)))
+						moves.append(Move(start_sq, start_sq-9, get_move_notation(piece, start_sq, start_sq-9, b)))
 
 	# TODO: Promotion; a bit tricky because it must be included in all the other existing things, four times for four different promotion pieces
 
 	return moves
 
 
-def generate_knight_moves(start_sq: int, piece: Piece) -> [Move]:
+def generate_knight_moves(start_sq: int, piece: Piece, b: Board) -> [Move]:
 	"""Generates moves for Knights"""
 	moves = []
-	global b
 
 	# Up
 	if start_sq % 8 != 0 and start_sq//8 < 6:
 		if not is_same_colour(piece, b.square[start_sq+15]):
-			moves.append(Move(start_sq, start_sq+15, get_move_notation(piece, start_sq, start_sq+15)))
+			moves.append(Move(start_sq, start_sq+15, get_move_notation(piece, start_sq, start_sq+15, b)))
 	if start_sq % 8 != 7 and start_sq//8 < 6:
 		if not is_same_colour(piece, b.square[start_sq+17]):
-			moves.append(Move(start_sq, start_sq+17, get_move_notation(piece, start_sq, start_sq+17)))
+			moves.append(Move(start_sq, start_sq+17, get_move_notation(piece, start_sq, start_sq+17, b)))
 
 	# Right
 	if start_sq % 8 < 6 and start_sq//8 != 7:
 		if not is_same_colour(piece, b.square[start_sq+10]):
-			moves.append(Move(start_sq, start_sq+10, get_move_notation(piece, start_sq, start_sq+10)))
+			moves.append(Move(start_sq, start_sq+10, get_move_notation(piece, start_sq, start_sq+10, b)))
 	if start_sq % 8 < 6 and start_sq//8 != 0:
 		if not is_same_colour(piece, b.square[start_sq-6]):
-			moves.append(Move(start_sq, start_sq-6, get_move_notation(piece, start_sq, start_sq-6)))
+			moves.append(Move(start_sq, start_sq-6, get_move_notation(piece, start_sq, start_sq-6, b)))
 
 	# Down
 	if start_sq % 8 != 0 and start_sq//8 > 1:
 		if not is_same_colour(piece, b.square[start_sq-17]):
-			moves.append(Move(start_sq, start_sq-17, get_move_notation(piece, start_sq, start_sq-17)))
+			moves.append(Move(start_sq, start_sq-17, get_move_notation(piece, start_sq, start_sq-17, b)))
 	if start_sq % 8 != 7 and start_sq//8 > 1:
 		if not is_same_colour(piece, b.square[start_sq-15]):
-			moves.append(Move(start_sq, start_sq-15, get_move_notation(piece, start_sq, start_sq-15)))
+			moves.append(Move(start_sq, start_sq-15, get_move_notation(piece, start_sq, start_sq-15, b)))
 
 	# Left
 	if start_sq % 8 > 1 and start_sq//8 != 0:
 		if not is_same_colour(piece, b.square[start_sq-10]):
-			moves.append(Move(start_sq, start_sq-10, get_move_notation(piece, start_sq, start_sq-10)))
+			moves.append(Move(start_sq, start_sq-10, get_move_notation(piece, start_sq, start_sq-10, b)))
 	if start_sq % 8 > 1 and start_sq//8 != 7:
 		if not is_same_colour(piece, b.square[start_sq+6]):
-			moves.append(Move(start_sq, start_sq+6, get_move_notation(piece, start_sq, start_sq+6)))
+			moves.append(Move(start_sq, start_sq+6, get_move_notation(piece, start_sq, start_sq+6, b)))
 	
 	return moves
 
@@ -268,17 +255,15 @@ def is_checkmate(b: Board) -> bool:
 	pass
 
 
-def move(start_sq, target_sq) -> bool:
+def move(start_sq, target_sq, b: Board, all_moves: [Move], to_move: Piece, num_squares_to_edge: [[]]) -> bool:
 	"""Makes a move on the board, returns bool if successfull (false=illegal)"""
-	global b
-	global all_moves
 
 	if to_move not in b.square[start_sq]:
 		return False
 
-	new_move = Move(start_sq, target_sq, get_move_notation(b.square[start_sq], start_sq, target_sq))
+	new_move = Move(start_sq, target_sq, get_move_notation(b.square[start_sq], start_sq, target_sq, b))
 
-	poss_moves = all_possible_turns_piece(start_sq)
+	poss_moves = all_possible_turns_piece(start_sq, all_moves, num_squares_to_edge, b)
 	
 	if new_move in poss_moves:
 		all_moves.append(new_move)
@@ -338,7 +323,7 @@ def is_sliding_piece(piece: Piece):
 	return Piece.Rook in piece or Piece.Bishop in piece or Piece.Queen in piece
 
 
-def get_move_notation(piece: Piece, start_sq: int, target_sq: int, special_turn: SpecialTurn = None, is_check : bool = False, is_checkmate = False) -> str:
+def get_move_notation(piece: Piece, start_sq: int, target_sq: int, b: Board, special_turn: SpecialTurn = None, is_check : bool = False, is_checkmate = False) -> str:
 	"""This method returns a string of algebraic chess notation for a move"""
 	start_sq_ind = index_to_square_name(start_sq)
 	target_sq_ind = index_to_square_name(target_sq)
@@ -451,14 +436,12 @@ def index_to_square_name(ind: int) -> str:
 	#return ""
 	return num_dict[ind%8]+str(int(ind/8)+1)
 
-def castle(player_to_move: Piece, long: bool) -> bool:
+def castle(player_to_move: Piece, long: bool, b: Board) -> bool:
 	"""Möglich wenn: der König noch nicht gezogen wurde,
 	der beteiligte Turm noch nicht gezogen wurde,
 	zwischen dem König und dem beteiligten Turm keine andere Figur steht,
 	der König über kein Feld ziehen muss, das durch eine feindliche Figur bedroht wird,
 	der König vor und nach Ausführung der Rochade nicht im Schach steht."""
-	
-	global b
 
 	if is_check(b):
 		return False
