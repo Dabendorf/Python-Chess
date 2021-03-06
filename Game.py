@@ -51,10 +51,7 @@ def main():
 		pygame.mixer.music.play()
 
 		
-		if to_move == Piece.White:
-			to_move = Piece.Black
-		else:
-			to_move = Piece.White
+		to_move = get_other_colour(to_move)
 		
 		print("========")
 		num_squares_to_edge = compute_margin_to_edge()
@@ -523,6 +520,14 @@ def draw(board, screen):
 			textpos.centerx = rect.centerx
 			textpos.centery = rect.centery
 			screen.blit(text, textpos)
+
+def get_other_colour(piece: Piece) -> Piece:
+	""" Returns the person who isn't in charge of doing the next turn"""
+
+	if Piece.White in piece:
+		return Piece.Black
+	else:
+		return Piece.White
 
 	
 
