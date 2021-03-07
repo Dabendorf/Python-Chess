@@ -46,6 +46,11 @@ class Board:
 			print("")
 			print("–"*17)
 
+	def __copy__(self):
+		newone = type(self)()
+		newone.__dict__.update(self.__dict__)
+		return newone
+
 
 def piece_to_letter_colourless(piece: Piece):
 	letter_dict = {Piece.Rook : "r", Piece.Knight : "n", Piece.Bishop : "b", Piece.Queen: "q", Piece.King : "k", Piece.Pawn : "p", Piece.Empty : " "}

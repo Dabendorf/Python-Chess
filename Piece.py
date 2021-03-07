@@ -1,5 +1,7 @@
 from enum import Flag, auto
 
+from copy import copy, deepcopy
+
 class Piece(Flag):
 	"This class represents a piece and its colour"
 	Empty = auto()

@@ -3,6 +3,9 @@ from Piece import Piece
 from Move import Move
 from SpecialTurn import SpecialTurn
 import pygame
+import random
+
+from copy import copy, deepcopy
 
 def main():
 	b = Board.Board()
@@ -19,6 +22,9 @@ def main():
 	pygame.display.update()
 	pygame.display.flip()
 	pygame.mixer.pre_init(44100, -16, 2, 2048)
+
+	p1 = Piece.Pawn | Piece.Black
+	p2 = Piece.Empty
 
 	num_squares_to_edge = compute_margin_to_edge()
 	print("Possible moves: "+str(all_possible_turns_player(to_move, b, all_moves, num_squares_to_edge)))
@@ -55,6 +61,7 @@ def main():
 		pygame.display.flip()
 		screen.fill((60,60,60))
 		pygame.time.wait(3000)
+	# all_possible_turns_player_ai(to_move, b, all_moves, num_squares_to_edge, 35)
 
 
 
@@ -72,11 +79,52 @@ def all_possible_turns_piece(start_sq: int, all_moves: [Move], num_squares_to_ed
 	elif Piece.Pawn in piece:
 		moves.extend(generate_pawn_moves(start_sq, piece, b, all_moves))
 	elif Piece.Knight in piece:
-		moves.extend(generate_knight_moves(start_sq, piece))
+		moves.extend(generate_knight_moves(start_sq, piece, b))
 
 	return moves
 
-	# TODO More pieces
+
+def all_possible_turns_player_ai(player_to_move: Piece, b: Board, all_moves: [Move], num_squares_to_edge: [[]], recursive_steps_left: int) -> [Move]:
+	"""Experimental function for potential ai player"""
+
+	if recursive_steps_left > 0:
+		move_list = all_possible_turns_player(player_to_move, copy(b), all_moves.copy(), num_squares_to_edge.copy())
+
+		if len(all_moves) > 0:
+			print("Zugmenge "+str(recursive_steps_left)+"|"+str(player_to_move)+": "+str(all_moves[-1])+";"+str(len(move_list))+str(move_list))
+			# print(all_moves)
+		else:
+			print("Zugmenge "+str(recursive_steps_left)+"|"+str(player_to_move)+": "+str(len(move_list))+str(move_list))
+
+		count = 1
+		for move2 in move_list:
+			if count == 1:
+				count = 0
+				b2 = copy(b)
+				a = all_moves.copy()
+				
+				# b.print_board()
+				move(move2.start_square, move2.target_square, b2, a, player_to_move, num_squares_to_edge.copy(), move2.special_turn)
+				numOStE = compute_margin_to_edge()
+				all_possible_turns_player_ai(get_other_colour(player_to_move), b2, a, numOStE, recursive_steps_left-1)
+
+
+	"""if recursive_steps_left > 0:
+		b2 = copy(b)
+
+		for move in move_list:
+			move(st, tg, b2, all_moves, to_move, num_squares_to_edge)
+
+			move_list = all_possible_turns_player_ai(get_other_colour(player_to_move), b2, all_moves.copy(), num_squares_to_edge.copy(), recursive_steps_left-1)
+
+			print(len(move_list))
+			print(player_to_move)
+
+			return move_list
+	else:
+		player_to_move = get_other_colour(player_to_move)
+		return all_possible_turns_player(player_to_move, copy(b), all_moves.copy(), num_squares_to_edge.copy())"""
+
 
 def all_possible_turns_player(player_to_move: Piece, b: Board, all_moves: [Move], num_squares_to_edge: [[]]) -> [Move]:
 	# for every piece, if colour of player to move
@@ -148,37 +196,73 @@ def generate_pawn_moves(start_sq: int, piece: Piece, b: Board, all_moves: [Move]
 	"""Generates moves for Pawns"""
 	moves = []
 
+	promo_list = [SpecialTurn.PromoteQueen, SpecialTurn.PromoteRook, SpecialTurn.PromoteBishop, SpecialTurn.PromoteKnight]
+
+	# print(str(start_sq)+str(piece))
 	if Piece.White in piece:
 		if start_sq//8 == 1:
 			if Piece.Empty in b.square[start_sq+8] and Piece.Empty in b.square[start_sq+16]:
 				moves.append(Move(start_sq, start_sq+16, get_move_notation(piece, start_sq, start_sq+16, b)))
 		
-		if Piece.Empty in b.square[start_sq+8]:
-			moves.append(Move(start_sq, start_sq+8, get_move_notation(piece, start_sq, start_sq+8, b)))
+		# checks if promotion
+		# This is in fact highly redundant, but we did not find something better yet
+		if start_sq//8 == 6:
+			if Piece.Empty in b.square[start_sq+8]:
+				for promo in promo_list:
+					moves.append(Move(start_sq, start_sq+8, get_move_notation(piece, start_sq, start_sq+8, b, special_turn=promo), special_turn=promo))
 
-		if start_sq % 8 != 0:
-			if is_same_colour(piece, b.square[start_sq+7]):
-				moves.append(Move(start_sq, start_sq+7, get_move_notation(piece, start_sq, start_sq+7, b)))
+			if start_sq % 8 != 0:
+				if is_different_colour(piece, b.square[start_sq+7]):
+					for promo in promo_list:
+						moves.append(Move(start_sq, start_sq+7, get_move_notation(piece, start_sq, start_sq+7, b, special_turn=promo), special_turn=promo))
 
-		if start_sq % 8 != 7:
-			if is_different_colour(piece, b.square[start_sq+9]):
-				moves.append(Move(start_sq, start_sq+9, get_move_notation(piece, start_sq, start_sq+9, b)))
+			if start_sq % 8 != 7:
+				if is_different_colour(piece, b.square[start_sq+9]):
+					for promo in promo_list:
+						moves.append(Move(start_sq, start_sq+9, get_move_notation(piece, start_sq, start_sq+9, b, special_turn=promo), special_turn=promo))
+		else:
+			if Piece.Empty in b.square[start_sq+8]:
+				moves.append(Move(start_sq, start_sq+8, get_move_notation(piece, start_sq, start_sq+8, b)))
+
+			if start_sq % 8 != 0:
+				if is_different_colour(piece, b.square[start_sq+7]):
+					moves.append(Move(start_sq, start_sq+7, get_move_notation(piece, start_sq, start_sq+7, b)))
+
+			if start_sq % 8 != 7:
+				if is_different_colour(piece, b.square[start_sq+9]):
+					moves.append(Move(start_sq, start_sq+9, get_move_notation(piece, start_sq, start_sq+9, b)))
 
 	else:
 		if start_sq//8 == 6:
 			if Piece.Empty in b.square[start_sq-8] and Piece.Empty in b.square[start_sq-16]:
 				moves.append(Move(start_sq, start_sq-16, get_move_notation(piece, start_sq, start_sq-16, b)))
 		
-		if Piece.Empty in b.square[start_sq-8]:
-			moves.append(Move(start_sq, start_sq-8, get_move_notation(piece, start_sq, start_sq-8, b)))
+		# if promotion
+		if start_sq//8 == 1:
+			if Piece.Empty in b.square[start_sq-8]:
+				for promo in promo_list:
+					moves.append(Move(start_sq, start_sq-8, get_move_notation(piece, start_sq, start_sq-8, b, special_turn=promo), special_turn=promo))
 
-		if start_sq % 8 != 0:
-			if is_same_colour(piece, b.square[start_sq-9]):
-				moves.append(Move(start_sq, start_sq-9, get_move_notation(piece, start_sq, start_sq-9, b)))
+			if start_sq % 8 != 0:
+				if is_different_colour(piece, b.square[start_sq-9]):
+					for promo in promo_list:
+						moves.append(Move(start_sq, start_sq-9, get_move_notation(piece, start_sq, start_sq-9, b, special_turn=promo), special_turn=promo))
 
-		if start_sq % 8 != 7:
-			if is_different_colour(piece, b.square[start_sq-7]):
-				moves.append(Move(start_sq, start_sq-7, get_move_notation(piece, start_sq, start_sq-7, b)))
+			if start_sq % 8 != 7:
+				if is_different_colour(piece, b.square[start_sq-7]):
+					for promo in promo_list:
+						moves.append(Move(start_sq, start_sq-7, get_move_notation(piece, start_sq, start_sq-7, b, special_turn=promo), special_turn=promo))
+		else:
+			if Piece.Empty in b.square[start_sq-8]:
+				moves.append(Move(start_sq, start_sq-8, get_move_notation(piece, start_sq, start_sq-8, b)))
+
+			if start_sq % 8 != 0:
+				if is_different_colour(piece, b.square[start_sq-9]):
+					moves.append(Move(start_sq, start_sq-9, get_move_notation(piece, start_sq, start_sq-9, b)))
+
+			if start_sq % 8 != 7:
+				if is_different_colour(piece, b.square[start_sq-7]):
+					moves.append(Move(start_sq, start_sq-7, get_move_notation(piece, start_sq, start_sq-7, b)))
 
 	# En passante
 	if len(all_moves) != 0:
@@ -202,8 +286,6 @@ def generate_pawn_moves(start_sq: int, piece: Piece, b: Board, all_moves: [Move]
 					# En passante from right
 					elif start_sq-1 == last_move.target_square:
 						moves.append(Move(start_sq, start_sq-9, get_move_notation(piece, start_sq, start_sq-9, b)))
-
-	# TODO: Promotion; a bit tricky because it must be included in all the other existing things, four times for four different promotion pieces
 
 	return moves
 
@@ -255,13 +337,16 @@ def is_checkmate(b: Board) -> bool:
 	pass
 
 
-def move(start_sq, target_sq, b: Board, all_moves: [Move], to_move: Piece, num_squares_to_edge: [[]]) -> bool:
+def move(start_sq, target_sq, b: Board, all_moves: [Move], to_move: Piece, num_squares_to_edge: [[]], special_turn: SpecialTurn = None) -> bool:
 	"""Makes a move on the board, returns bool if successfull (false=illegal)"""
 
 	if to_move not in b.square[start_sq]:
 		return False
 
-	new_move = Move(start_sq, target_sq, get_move_notation(b.square[start_sq], start_sq, target_sq, b))
+	if special_turn == None:
+		new_move = Move(start_sq, target_sq, get_move_notation(b.square[start_sq], start_sq, target_sq, b))
+	else:
+		new_move = Move(start_sq, target_sq, get_move_notation(b.square[start_sq], start_sq, target_sq, b, special_turn=special_turn), special_turn=special_turn)
 
 	poss_moves = all_possible_turns_piece(start_sq, all_moves, num_squares_to_edge, b)
 	
@@ -269,6 +354,23 @@ def move(start_sq, target_sq, b: Board, all_moves: [Move], to_move: Piece, num_s
 		all_moves.append(new_move)
 		b.square[target_sq] = b.square[start_sq]
 		b.square[start_sq] = Piece.Empty
+
+	colour = Piece.Empty
+	if Piece.White in b.square[target_sq]:
+		colour = Piece.White
+	elif Piece.Black in b.square[target_sq]:
+		colour = Piece.Black
+
+	if special_turn != None:
+		if SpecialTurn.PromoteQueen in special_turn:
+			b.square[target_sq] = Piece.Queen | colour
+		elif SpecialTurn.PromoteRook in special_turn:
+			b.square[target_sq] = Piece.Rook | colour
+		elif SpecialTurn.PromoteBishop in special_turn:
+			b.square[target_sq] = Piece.Bishop | colour
+		elif SpecialTurn.PromoteKnight in special_turn:
+			b.square[target_sq] = Piece.Knight | colour
+		
 
 		return True
 	else:
@@ -298,6 +400,9 @@ def compute_margin_to_edge() -> [[int]]:
 def is_same_colour(piece1: Piece, piece2: Piece):
 	""" For two pieces, function returns if both pieces have the same colour"""
 
+	if Piece.Empty in piece1 or Piece.Empty in piece2:
+		return False
+
 	if Piece.White in piece1 and Piece.White in piece2:
 		return True
 	elif Piece.Black in piece1 and Piece.Black in piece2:
@@ -308,6 +413,9 @@ def is_same_colour(piece1: Piece, piece2: Piece):
 def is_different_colour(piece1: Piece, piece2: Piece):
 	""" For two pieces, function returns if both pieces are different
 		Pay attention for the fact that this is not the opposite of same_colour as it is possible to be Piece.Empty"""
+
+	if Piece.Empty in piece1 or Piece.Empty in piece2:
+		return False
 
 	if Piece.White in piece1 and Piece.Black in piece2:
 		return True
@@ -352,6 +460,7 @@ def get_move_notation(piece: Piece, start_sq: int, target_sq: int, b: Board, spe
 
 	move_string = ""
 
+
 	if Piece.Pawn in piece:
 		if start_sq % 8 == target_sq % 8:
 			move_string = target_sq_ind
@@ -364,9 +473,9 @@ def get_move_notation(piece: Piece, start_sq: int, target_sq: int, b: Board, spe
 					if Piece.Pawn in b.square[start_sq-2]:
 						move_string = start_sq_ind+"x"+target_sq_ind
 					else:
-						"x"+target_sq_ind
+						move_string = "x"+target_sq_ind
 				else:
-					"x"+target_sq_ind
+					move_string = "x"+target_sq_ind
 			# Capture to the right
 			else:
 				# Edge on the right
@@ -375,9 +484,9 @@ def get_move_notation(piece: Piece, start_sq: int, target_sq: int, b: Board, spe
 					if Piece.Pawn in b.square[start_sq+2]:
 						move_string = start_sq_ind+"x"+target_sq_ind
 					else:
-						"x"+target_sq_ind
+						move_string = "x"+target_sq_ind
 				else:
-					"x"+target_sq_ind
+					move_string = "x"+target_sq_ind
 
 
 	elif Piece.King in piece:
