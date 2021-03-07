@@ -27,14 +27,14 @@ def main():
 	p2 = Piece.Empty
 
 	num_squares_to_edge = compute_margin_to_edge()
-	print("Possible moves: "+str(all_possible_turns_player(to_move, b, all_moves, num_squares_to_edge)))
+	print("Possible moves: "+str(all_possible_turns_player(to_move, b, all_moves)))
 	# thats a temporary test structure for some example moves
 	
 	moves_to_do_list = [(14, 22), (52, 36), (5, 14)]
 
 	#Attention this test-loop is now used ad the pygame-mainloop
 	#Further changes here need to be well thought through
-	for st, tg in moves_to_do_list:
+	"""for st, tg in moves_to_do_list:
 		#Event-Loop
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
@@ -60,20 +60,21 @@ def main():
 		#NextFrameSetUp
 		pygame.display.flip()
 		screen.fill((60,60,60))
-		pygame.time.wait(3000)
-	# all_possible_turns_player_ai(to_move, b, all_moves, num_squares_to_edge, 35)
+		pygame.time.wait(3000)"""
+	print(all_possible_turns_player_ai(to_move, b, all_moves, 3))
 
 
 
 def is_legal(piece: Piece):
 	pass
 
-def all_possible_turns_piece(start_sq: int, all_moves: [Move], num_squares_to_edge: [[]], b: Board) -> [Move]:
+
+def all_possible_turns_piece(start_sq: int, all_moves: [Move], b: Board) -> [Move]:
 	piece = b.square[start_sq]
 	moves = []
 
 	if is_sliding_piece(piece):
-		moves.extend(generate_sliding_moves(start_sq, piece, b, num_squares_to_edge))
+		moves.extend(generate_sliding_moves(start_sq, piece, b))
 	elif Piece.King in piece:
 		moves.extend(generate_king_moves(start_sq, piece, b))
 	elif Piece.Pawn in piece:
@@ -84,49 +85,31 @@ def all_possible_turns_piece(start_sq: int, all_moves: [Move], num_squares_to_ed
 	return moves
 
 
-def all_possible_turns_player_ai(player_to_move: Piece, b: Board, all_moves: [Move], num_squares_to_edge: [[]], recursive_steps_left: int) -> [Move]:
+def all_possible_turns_player_ai(player_to_move: Piece, b: Board, all_moves: [Move], depth: int) -> int:
 	"""Experimental function for potential ai player"""
 
-	if recursive_steps_left > 0:
-		move_list = all_possible_turns_player(player_to_move, copy(b), all_moves.copy(), num_squares_to_edge.copy())
+	if depth == 0:
+		return 1
 
-		if len(all_moves) > 0:
-			print("Zugmenge "+str(recursive_steps_left)+"|"+str(player_to_move)+": "+str(all_moves[-1])+";"+str(len(move_list))+str(move_list))
-			# print(all_moves)
-		else:
-			print("Zugmenge "+str(recursive_steps_left)+"|"+str(player_to_move)+": "+str(len(move_list))+str(move_list))
+	move_list = all_possible_turns_player(player_to_move, deepcopy(b), deepcopy(all_moves))
 
-		count = 1
-		for move2 in move_list:
-			if count == 1:
-				count = 0
-				b2 = copy(b)
-				a = all_moves.copy()
-				
-				# b.print_board()
-				move(move2.start_square, move2.target_square, b2, a, player_to_move, num_squares_to_edge.copy(), move2.special_turn)
-				numOStE = compute_margin_to_edge()
-				all_possible_turns_player_ai(get_other_colour(player_to_move), b2, a, numOStE, recursive_steps_left-1)
+	#if len(all_moves) > 0:
+	#	print("Zugmenge "+str(depth)+"|"+str(player_to_move)+": "+str(all_moves[-1])+";"+str(len(move_list))+str(move_list))
+	#else:
+	#	print("Zugmenge "+str(depth)+"|"+str(player_to_move)+": "+str(len(move_list))+str(move_list))
 
-
-	"""if recursive_steps_left > 0:
-		b2 = copy(b)
-
-		for move in move_list:
-			move(st, tg, b2, all_moves, to_move, num_squares_to_edge)
-
-			move_list = all_possible_turns_player_ai(get_other_colour(player_to_move), b2, all_moves.copy(), num_squares_to_edge.copy(), recursive_steps_left-1)
-
-			print(len(move_list))
-			print(player_to_move)
-
-			return move_list
-	else:
-		player_to_move = get_other_colour(player_to_move)
-		return all_possible_turns_player(player_to_move, copy(b), all_moves.copy(), num_squares_to_edge.copy())"""
+	count = 0
+	for move2 in move_list:
+		board_copy = deepcopy(b)
+		all_moves_copy = deepcopy(all_moves)
+		
+		move(move2.start_square, move2.target_square, board_copy, deepcopy(all_moves), player_to_move, move2.special_turn)
+		count += all_possible_turns_player_ai(get_other_colour(player_to_move), board_copy, deepcopy(all_moves), depth-1)
+	
+	return count
 
 
-def all_possible_turns_player(player_to_move: Piece, b: Board, all_moves: [Move], num_squares_to_edge: [[]]) -> [Move]:
+def all_possible_turns_player(player_to_move: Piece, b: Board, all_moves: [Move]) -> [Move]:
 	# for every piece, if colour of player to move
 	# if own piece in way, change searching direction
 	# if opponent's piece in way, capture it, then change direction
@@ -136,7 +119,7 @@ def all_possible_turns_player(player_to_move: Piece, b: Board, all_moves: [Move]
 	for i in range(0, 64):
 		if(is_same_colour(b.square[i], player_to_move)):
 			if is_sliding_piece(b.square[i]):
-				moves.extend(generate_sliding_moves(i, b.square[i], b, num_squares_to_edge))
+				moves.extend(generate_sliding_moves(i, b.square[i], b))
 			elif Piece.King in b.square[i]:
 				moves.extend(generate_king_moves(i, b.square[i], b))
 			elif Piece.Pawn in b.square[i]:
@@ -147,8 +130,10 @@ def all_possible_turns_player(player_to_move: Piece, b: Board, all_moves: [Move]
 	return moves
 
 
-def generate_sliding_moves(start_sq: int, piece: Piece, b: Board, num_squares_to_edge: [[]]) -> [Move]:
+def generate_sliding_moves(start_sq: int, piece: Piece, b: Board) -> [Move]:
 	"""Generates moves for Rooks, Bishops and Queens"""
+
+	num_squares_to_edge = compute_margin_to_edge()
 	direction_offsets = [8, -8, -1, 1, 7, -7, 9, -9]
 	moves = []
 	start_ind = 0
@@ -337,7 +322,7 @@ def is_checkmate(b: Board) -> bool:
 	pass
 
 
-def move(start_sq, target_sq, b: Board, all_moves: [Move], to_move: Piece, num_squares_to_edge: [[]], special_turn: SpecialTurn = None) -> bool:
+def move(start_sq, target_sq, b: Board, all_moves: [Move], to_move: Piece, special_turn: SpecialTurn = None) -> bool:
 	"""Makes a move on the board, returns bool if successfull (false=illegal)"""
 
 	if to_move not in b.square[start_sq]:
@@ -348,7 +333,7 @@ def move(start_sq, target_sq, b: Board, all_moves: [Move], to_move: Piece, num_s
 	else:
 		new_move = Move(start_sq, target_sq, get_move_notation(b.square[start_sq], start_sq, target_sq, b, special_turn=special_turn), special_turn=special_turn)
 
-	poss_moves = all_possible_turns_piece(start_sq, all_moves, num_squares_to_edge, b)
+	poss_moves = all_possible_turns_piece(start_sq, deepcopy(all_moves), deepcopy(b))
 	
 	if new_move in poss_moves:
 		all_moves.append(new_move)
@@ -375,7 +360,6 @@ def move(start_sq, target_sq, b: Board, all_moves: [Move], to_move: Piece, num_s
 		return True
 	else:
 		return False
-
 
 
 def compute_margin_to_edge() -> [[int]]:
@@ -409,6 +393,7 @@ def is_same_colour(piece1: Piece, piece2: Piece):
 		return True
 	else:
 		return False
+
 
 def is_different_colour(piece1: Piece, piece2: Piece):
 	""" For two pieces, function returns if both pieces are different
@@ -538,12 +523,14 @@ def get_move_notation(piece: Piece, start_sq: int, target_sq: int, b: Board, spe
 
 	return move_string + promotion_string + check_string
 
+
 def index_to_square_name(ind: int) -> str:
 	"""Returns the name of a square (e.g. A4) for any index on the board """
 	num_dict = {0:"a", 1:"b", 2:"c", 3:"d", 4:"e", 5:"f", 6:"g", 7:"h"}
 
 	#return ""
 	return num_dict[ind%8]+str(int(ind/8)+1)
+
 
 def castle(player_to_move: Piece, long: bool, b: Board) -> bool:
 	"""Möglich wenn: der König noch nicht gezogen wurde,
@@ -594,6 +581,7 @@ def castle(player_to_move: Piece, long: bool, b: Board) -> bool:
 	# TODO Proof of all the named conditions and the booleans
 	pass
 
+
 def draw(board, screen):
 	"""This method draws the board as designed"""
 	xsize = screen.get_height()//8
@@ -612,6 +600,7 @@ def draw(board, screen):
 			textpos.centerx = rect.centerx
 			textpos.centery = rect.centery
 			screen.blit(text, textpos)
+
 
 def get_other_colour(piece: Piece) -> Piece:
 	""" Returns the person who isn't in charge of doing the next turn"""
