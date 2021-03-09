@@ -336,9 +336,58 @@ def move(start_sq, target_sq, b: Board, all_moves: [Move], to_move: Piece, speci
 	poss_moves = all_possible_turns_piece(start_sq, deepcopy(all_moves), deepcopy(b))
 	
 	if new_move in poss_moves:
+		if special_turn == SpecialTurn.CastlingShort:
+			if Piece.White in to_move:
+				b.square[4] = Piece.Empty
+				b.square[5] = Piece.White | Piece.Rook
+				b.square[6] = Piece.White | Piece.King
+				b.square[7] = Piece.Empty
+			else:
+				b.square[60] = Piece.Empty
+				b.square[61] = Piece.Black | Piece.Rook
+				b.square[62] = Piece.Black | Piece.King
+				b.square[63] = Piece.Empty
+		elif special_turn == SpecialTurn.CastlingLong
+			if Piece.White in to_move:
+				b.square[0] = Piece.Empty
+				b.square[2] = Piece.White | Piece.King
+				b.square[3] = Piece.White | Piece.Rook
+				b.square[4] = Piece.Empty
+			else:
+				b.square[56] = Piece.Empty
+				b.square[58] = Piece.Black | Piece.King
+				b.square[59] = Piece.Black | Piece.Rook
+				b.square[60] = Piece.Empty
+
+
 		all_moves.append(new_move)
 		b.square[target_sq] = b.square[start_sq]
 		b.square[start_sq] = Piece.Empty
+
+		if Piece.Rook in to_move:
+			if start_sq==0:
+				b.moved_rook_white_a1 = True
+			elif start_sq==7:
+				b.moved_rook_black_a8 = True
+			elif start_sq==56:
+				b.moved_rook_black_a8 = True
+			elif start_sq==63:
+				b.moved_rook_black_h8 = True
+
+		if target_sq == 0:
+			b.moved_rook_white_a1 = True
+		elif target_sq==7:
+				b.moved_rook_black_a8 = True
+		elif target_sq==56:
+				b.moved_rook_black_a8 = True
+		elif target_sq==63:
+				b.moved_rook_black_h8 = True
+
+		if Piece.King in to_move:
+			if Piece.White in to_move:
+				b.moved_king_white = True
+			else:
+				b.moved_king_black = True
 
 	colour = Piece.Empty
 	if Piece.White in b.square[target_sq]:
