@@ -61,6 +61,7 @@ def main():
 		pygame.display.flip()
 		screen.fill((60,60,60))
 		pygame.time.wait(3000)"""
+
 	print(all_possible_turns_player_ai(to_move, b, all_moves, 3))
 
 
@@ -93,10 +94,10 @@ def all_possible_turns_player_ai(player_to_move: Piece, b: Board, all_moves: [Mo
 
 	move_list = all_possible_turns_player(player_to_move, deepcopy(b), deepcopy(all_moves))
 
-	#if len(all_moves) > 0:
-	#	print("Zugmenge "+str(depth)+"|"+str(player_to_move)+": "+str(all_moves[-1])+";"+str(len(move_list))+str(move_list))
-	#else:
-	#	print("Zugmenge "+str(depth)+"|"+str(player_to_move)+": "+str(len(move_list))+str(move_list))
+	if len(all_moves) > 0:
+		print("Zugmenge "+str(depth)+"|"+str(player_to_move)+": "+str(all_moves[-1])+";"+str(len(move_list))+str(move_list))
+	else:
+		print("Zugmenge "+str(depth)+"|"+str(player_to_move)+": "+str(len(move_list))+str(move_list))
 
 	count = 0
 	for move2 in move_list:
@@ -104,6 +105,7 @@ def all_possible_turns_player_ai(player_to_move: Piece, b: Board, all_moves: [Mo
 		all_moves_copy = deepcopy(all_moves)
 		
 		move(move2.start_square, move2.target_square, board_copy, deepcopy(all_moves), player_to_move, move2.special_turn)
+		
 		count += all_possible_turns_player_ai(get_other_colour(player_to_move), board_copy, deepcopy(all_moves), depth-1)
 	
 	return count
@@ -165,14 +167,16 @@ def generate_king_moves(start_sq: int, piece: Piece, b: Board) -> [Move]:
 
 	dire = [-7, -8, -9, -1, 1, 7, 8, 9]
 	for i in dire:
-		if not is_check(b):
+		if not is_check(b, piece):
 			target_sq = start_sq+i
 			if target_sq > -1 and target_sq < 64:
 				if not is_same_colour(piece, b.square[target_sq]):
 					moves.append(Move(start_sq, target_sq, get_move_notation(piece, start_sq, target_sq, b)))
 
-	# TODO: Rochade
-	# TODO the used check function above is not working yet
+	if castle(piece, True, deepcopy(b)):
+		moves.append(Move(start_sq, start_sq-2, get_move_notation(piece, start_sq, start_sq-2, b), special_turn=SpecialTurn.CastlingLong))
+	if castle(piece, False, deepcopy(b)):
+		moves.append(Move(start_sq, start_sq+2, get_move_notation(piece, start_sq, start_sq+2, b), special_turn=SpecialTurn.CastlingShort))
 
 	return moves
 
@@ -314,8 +318,18 @@ def generate_knight_moves(start_sq: int, piece: Piece, b: Board) -> [Move]:
 	return moves
 
 
-def is_check(b: Board) -> bool:
-	return False # TODO
+def is_check(b: Board, colour: Piece) -> bool:
+	king_pos = -1
+	for ind in range(0,64):
+		if Piece.King in b.square[ind] and colour in b.square[ind]:
+			king_pos = ind
+
+	for ind in range(0,64):
+		if Piece.Empty not in b.square[ind] and Piece.King not in b.square[ind]:
+			poss_moves_piece = all_possible_turns_piece(ind, [], b)
+			for move in poss_moves_piece:
+				if move.target_square == king_pos:
+					return True
 
 
 def is_checkmate(b: Board) -> bool:
@@ -347,7 +361,7 @@ def move(start_sq, target_sq, b: Board, all_moves: [Move], to_move: Piece, speci
 				b.square[61] = Piece.Black | Piece.Rook
 				b.square[62] = Piece.Black | Piece.King
 				b.square[63] = Piece.Empty
-		elif special_turn == SpecialTurn.CastlingLong
+		elif special_turn == SpecialTurn.CastlingLong:
 			if Piece.White in to_move:
 				b.square[0] = Piece.Empty
 				b.square[2] = Piece.White | Piece.King
@@ -582,53 +596,88 @@ def index_to_square_name(ind: int) -> str:
 
 
 def castle(player_to_move: Piece, long: bool, b: Board) -> bool:
-	"""Möglich wenn: der König noch nicht gezogen wurde,
-	der beteiligte Turm noch nicht gezogen wurde,
-	zwischen dem König und dem beteiligten Turm keine andere Figur steht,
-	der König über kein Feld ziehen muss, das durch eine feindliche Figur bedroht wird,
-	der König vor und nach Ausführung der Rochade nicht im Schach steht."""
+	"""Proves if castling is possible"""
 
-	if is_check(b):
+	# King and Rook did not move yet
+	# No other piece between King and Rook
+	# King not in check, not moving over check squares, not ending in check
+
+	if is_check(b, player_to_move):
 		return False
-	elif Piece.White in player_to_move:
-		# White Player
+
+	if Piece.White in player_to_move:
 		if b.moved_king_white:
 			return False
-		elif long:
+
+		if long:
 			if b.moved_rook_white_a1:
 				return False
 			else:
-				pass
-				# TODO Check other conditions: King not moving over check-squares
+				if Piece.Empty not in b.square[1] or Piece.Empty not in b.square[2] or Piece.Empty not in b.square[3]:
+					return False
+				b_copy1 = deepcopy(b)
+				b_copy1.square[3] = Piece.King | Piece.White
+				if is_check(b_copy1, player_to_move):
+					return False
+				b_copy2 = deepcopy(b)
+				b_copy2.square[2] = Piece.King | Piece.White
+				if is_check(b_copy2, player_to_move):
+					return False
+				
+				return True
+
 		else:
-			# Short
 			if b.moved_rook_white_h1:
 				return False
 			else:
-				pass
-				# TODO Check other conditions: King not moving over check-squares
+				if Piece.Empty not in b.square[5] or Piece.Empty not in b.square[6]:
+					return False
+				b_copy1 = deepcopy(b)
+				b_copy1.square[5] = Piece.King | Piece.White
+				if is_check(b_copy1, player_to_move):
+					return False
+				b_copy2 = deepcopy(b)
+				b_copy2.square[6] = Piece.King | Piece.White
+				if is_check(b_copy2, player_to_move):
+					return False
+				
+				return True
 	else:
-		# Black Player
 		if b.moved_king_black:
 			return False
-		elif long:
+
+		if long:
 			if b.moved_rook_black_a8:
 				return False
 			else:
-				pass
-				# TODO Check other conditions: King not moving over check-squares
+				if Piece.Empty not in b.square[57] or Piece.Empty not in b.square[58] or Piece.Empty not in b.square[59]:
+					return False
+				b_copy1 = deepcopy(b)
+				b_copy1.square[59] = Piece.King | Piece.Black
+				if is_check(b_copy1, player_to_move):
+					return False
+				b_copy2 = deepcopy(b)
+				b_copy2.square[58] = Piece.King | Piece.Black
+				if is_check(b_copy2, player_to_move):
+					return False
+				
+				return True
 		else:
-			# Short
 			if b.moved_rook_black_h8:
 				return False
 			else:
-				pass
-				# TODO Check other conditions: King not moving over check-squares
-		
-	
-
-	# TODO Proof of all the named conditions and the booleans
-	pass
+				if Piece.Empty not in b.square[61] or Piece.Empty not in b.square[62]:
+					return False
+				b_copy1 = deepcopy(b)
+				b_copy1.square[61] = Piece.King | Piece.Black
+				if is_check(b_copy1, player_to_move):
+					return False
+				b_copy2 = deepcopy(b)
+				b_copy2.square[62] = Piece.King | Piece.Black
+				if is_check(b_copy2, player_to_move):
+					return False
+				
+				return True
 
 
 def draw(board, screen):

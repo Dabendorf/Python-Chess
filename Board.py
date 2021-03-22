@@ -11,8 +11,40 @@ class Board:
 
 	def __init__(self):
 		self.square = [Piece.Empty] * 64
+		
+		# Experimental board
 		self.square[0] = Piece.White | Piece.Rook
+		self.square[1] = Piece.White | Piece.Knight
+		self.square[2] = Piece.White | Piece.Bishop
+		self.square[3] = Piece.White | Piece.Queen
+		self.square[4] = Piece.White | Piece.King
+		self.square[7] = Piece.White | Piece.Rook
+		self.square[8] = Piece.White | Piece.Pawn
+		self.square[9] = Piece.White | Piece.Pawn
+		self.square[10] = Piece.White | Piece.Pawn
+		self.square[12] = Piece.White | Piece.Knight
+		self.square[14] = Piece.White | Piece.Pawn
+		self.square[15] = Piece.White | Piece.Pawn
+		self.square[26] = Piece.White | Piece.Bishop
+		self.square[15] = Piece.White | Piece.Pawn
+		self.square[51] = Piece.White | Piece.Pawn
 
+		self.square[56] = Piece.Black | Piece.Rook
+		self.square[57] = Piece.Black | Piece.Knight
+		self.square[58] = Piece.Black | Piece.Bishop
+		self.square[59] = Piece.Black | Piece.Queen
+		self.square[61] = Piece.Black | Piece.King
+		self.square[63] = Piece.Black | Piece.Rook
+		self.square[13] = Piece.Black | Piece.Knight
+		self.square[52] = Piece.Black | Piece.Bishop
+		self.square[55] = Piece.Black | Piece.Pawn
+		self.square[54] = Piece.Black | Piece.Pawn
+		self.square[53] = Piece.Black | Piece.Pawn
+		self.square[49] = Piece.Black | Piece.Pawn
+		self.square[48] = Piece.Black | Piece.Pawn
+		self.square[42] = Piece.Black | Piece.Pawn
+
+		"""self.square[0] = Piece.White | Piece.Rook
 		self.square[1] = Piece.White | Piece.Knight
 		self.square[2] = Piece.White | Piece.Bishop
 		self.square[3] = Piece.White | Piece.Queen
@@ -34,7 +66,7 @@ class Board:
 		self.square[60] = Piece.Black | Piece.King
 		self.square[61] = Piece.Black | Piece.Bishop
 		self.square[62] = Piece.Black | Piece.Knight
-		self.square[63] = Piece.Black | Piece.Rook
+		self.square[63] = Piece.Black | Piece.Rook"""
 
 	def print_board(self):
 		print("–"*17)
