@@ -34,7 +34,7 @@ def main():
 
 	#Attention this test-loop is now used ad the pygame-mainloop
 	#Further changes here need to be well thought through
-	"""for st, tg in moves_to_do_list:
+	for st, tg in moves_to_do_list:
 		#Event-Loop
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
@@ -55,14 +55,14 @@ def main():
 		
 		print("========")
 		num_squares_to_edge = compute_margin_to_edge()
-		print("Possible moves: "+str(all_possible_turns_player(to_move, b, all_moves, num_squares_to_edge)))
+		print("Possible moves: "+str(all_possible_turns_player(to_move, b, all_moves)))
 
 		#NextFrameSetUp
 		pygame.display.flip()
 		screen.fill((60,60,60))
-		pygame.time.wait(3000)"""
+		pygame.time.wait(3000)
 
-	print(all_possible_turns_player_ai(to_move, b, all_moves, 3))
+	# print(all_possible_turns_player_ai(to_move, b, all_moves, 3))
 
 
 
